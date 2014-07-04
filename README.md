@@ -1,4 +1,4 @@
 rasp-tempsensor
 ===============
 
-Temperature Sensor with a Rasberry Pi amd a DHT sensor.
+Temperature Sensor with a Rasberry Pi and a DHT sensor.
