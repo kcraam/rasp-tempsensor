@@ -1,10 +1,10 @@
 CC = gcc
 CFLAGS =  -std=c99 -I. -lbcm2835
 DEPS = 
-OBJ = Adafruit_DHT.o
+OBJ = tempsensor.o
 
 %.o: %.c $(DEPS)
 	$(CC) -c -o $@ $< $(CFLAGS)
 
-Adafruit_DHT: $(OBJ)
+tempsensor: $(OBJ)
 	gcc -o $@ $^ $(CFLAGS)
