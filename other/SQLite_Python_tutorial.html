@@ -1,0 +1,1648 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/><meta name="exporter-version" content="Evernote Mac 5.5.1 (402628)"/><meta name="keywords" content="Python, RaspberryPi"/><meta name="created" content="2014-07-31 14:29:25 +0000"/><meta name="source" content="Clearly"/><meta name="source-url" content="http://zetcode.com/db/sqlitepythontutorial/"/><meta name="updated" content="2014-07-31 14:29:25 +0000"/><title>SQLite Python tutorial</title></head><body><br/><div><div><div><div><h1>SQLite Python tutorial</h1></div>
+
+
+<p>
+This is a Python programming tutorial for the SQLite database. It covers the 
+basics of SQLite programming with the Python language. 
+You might also want to check the <a href="http://zetcode.com/lang/python/" target="_blank">Python tutorial</a>, 
+<a href="http://zetcode.com/db/sqlite/" target="_blank">SQLite tutorial</a> or 
+<a href="http://zetcode.com/db/mysqlpython/" target="_blank">MySQL Python tutorial</a> or 
+<a href="http://zetcode.com/db/postgresqlpythontutorial/" target="_blank">PostgreSQL Python tutorial</a> on ZetCode.
+</p>
+
+
+
+<h2>Prerequisites</h2>
+
+
+<p>
+To work with this tutorial, we must have Python language, SQLite database, pysqlite
+language binding and the sqlite3 command line tool installed on the system.
+If we have Python 2.5+ then we only need to install the sqlite3 command line tool. 
+Both the SQLite library and the pysqlite language binding are built into the Python
+languge. 
+</p>
+
+<pre>$ python
+Python 2.7.2+ (default, Jul 20 2012, 22:12:53) 
+[GCC 4.6.1] on linux2
+Type "help", "copyright", "credits" or "license" for more information.
+&gt;&gt;&gt; import sqlite3
+&gt;&gt;&gt; sqlite3.version
+'2.6.0'
+&gt;&gt;&gt; sqlite3.sqlite_version
+'3.7.7'
+</pre>
+
+<p>
+In the shell, we launch the Python interactive interpreter. We can see the
+Python version. In our case it is Python 2.7.2. The sqlite.version is
+the version of the pysqlite (2.6.0), which is the binding of the Python language
+to the SQLite database. The sqlite3.sqlite_version gives us the version
+of the SQLite database library. In our case it is 3.7.7.
+</p>
+
+
+<p>
+Now we are going to use the sqlite3 command line tool to create
+a new database. 
+</p>
+
+<pre>$ sqlite3 test.db 
+SQLite version 3.7.7 2011-06-23 19:49:22
+Enter ".help" for instructions
+Enter SQL statements terminated with a ";"
+</pre>
+
+<p>
+We provide a parameter to the sqlite3 tool. A "test.db" is a 
+database name. It is a file on our disk. If it is present, 
+it is opened. If not, it is created. 
+</p>
+
+
+<pre>sqlite&gt; .tables
+sqlite&gt; .exit
+$ ls
+test.db
+</pre>
+
+<p>
+The <code>.tables</code> command gives a list of tables in the test.db
+database. There are currently no tables. The <code>.exit</code> command
+terminates the interactive session of the sqlite3 command line tool. 
+The ls Unix command shows the contents of the current working directory. 
+We can see the test.db file. All data will be stored in this single file.
+</p>
+
+
+<h2>Version</h2>
+
+<p>
+In the first code example, we will get the version of the SQLite database.
+</p>
+
+<pre>#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+import sqlite3 as lite
+import sys
+
+con = None
+
+try:
+    con = lite.connect('test.db')
+    
+    cur = con.cursor()    
+    cur.execute('SELECT SQLITE_VERSION()')
+    
+    data = cur.fetchone()
+    
+    print "SQLite version: %s" % data                
+    
+except lite.Error, e:
+    
+    print "Error %s:" % e.args[0]
+    sys.exit(1)
+    
+finally:
+    
+    if con:
+        con.close()
+</pre>
+
+<p>
+In the above Python script we connect to the previously created
+test.db database. We execute an SQL statement which returns the
+version of the SQLite database. 
+</p>
+
+<pre>import sqlite3 as lite
+</pre>
+
+<p>
+The <code>sqlite3</code> module is used to work with the SQLite database.
+</p>
+
+<pre>con = None
+</pre>
+
+<p>
+We initialize the con variable to None. In case we could not create a connection
+to the database (for example the disk is full), we would not have a connection
+variable defined. This would lead to an error in the finally clause. 
+</p>
+
+<pre>con = lite.connect('test.db')
+</pre>
+
+<p>
+Here we connect to the test.db database. The <code>connect()</code>
+method returns a connection object. 
+</p>
+
+<pre>cur = con.cursor()    
+cur.execute('SELECT SQLITE_VERSION()')
+</pre>
+
+<p>
+From the connection, we get the cursor object. The cursor is used to traverse 
+the records from the result set. We call the <code>execute()</code> method of the cursor 
+and execute the SQL statement.
+</p>
+
+<pre>data = cur.fetchone()
+</pre>
+
+<p>
+We fetch the data. Since we retrieve only one record, we call the 
+<code>fetchone()</code> method.
+</p>
+
+<pre>print "SQLite version: %s" % data
+</pre>
+
+<p>
+We print the data that we have retrieved to the console.
+</p>
+
+
+<pre>except lite.Error, e:
+    
+    print "Error %s:" % e.args[0]
+    sys.exit(1)
+</pre>
+
+<p>
+In case of an exception, we print an error message and
+exit the script with an error code 1. 
+</p>
+
+<pre>finally:
+    
+    if con:
+        con.close() 
+</pre>
+
+<p>
+In the final step, we release the resources.
+</p>
+
+
+<hr/>
+
+<p>
+In the second example, we again get the version of the SQLite
+database. This time we will use the <code>with</code> keyword.
+</p>
+
+<pre>#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+import sqlite3 as lite
+import sys
+
+con = lite.connect('test.db')
+
+with con:
+    
+    cur = con.cursor()    
+    cur.execute('SELECT SQLITE_VERSION()')
+    
+    data = cur.fetchone()
+    
+    print "SQLite version: %s" % data  
+</pre>
+
+<p>
+The script returns the current version of the SQLite
+database. With the use of the <code>with</code> keyword. 
+The code is more compact.
+</p>
+
+<pre>with con:
+</pre>
+
+<p>
+With the <code>with</code> keyword, the Python interpreter
+automatically releases the resources. It also provides
+error handling. 
+</p>
+
+
+
+<h2>Inserting data</h2>
+
+<p>
+We will create a Cars table and insert several rows to it.
+</p>
+
+<pre>#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+import sqlite3 as lite
+import sys
+
+con = lite.connect('test.db')
+
+with con:
+    
+    cur = con.cursor()    
+    cur.execute("CREATE TABLE Cars(Id INT, Name TEXT, Price INT)")
+    cur.execute("INSERT INTO Cars VALUES(1,'Audi',52642)")
+    cur.execute("INSERT INTO Cars VALUES(2,'Mercedes',57127)")
+    cur.execute("INSERT INTO Cars VALUES(3,'Skoda',9000)")
+    cur.execute("INSERT INTO Cars VALUES(4,'Volvo',29000)")
+    cur.execute("INSERT INTO Cars VALUES(5,'Bentley',350000)")
+    cur.execute("INSERT INTO Cars VALUES(6,'Citroen',21000)")
+    cur.execute("INSERT INTO Cars VALUES(7,'Hummer',41400)")
+    cur.execute("INSERT INTO Cars VALUES(8,'Volkswagen',21600)")
+</pre>
+
+<p>
+The above script creates a Cars table and inserts 8 rows into the
+table. 
+</p>
+
+<pre>cur.execute("CREATE TABLE Cars(Id INT, Name TEXT, Price INT)")
+</pre>
+
+<p>
+This SQL statement creates a new Cars table. The table has
+three columns. 
+</p>
+
+<pre>cur.execute("INSERT INTO Cars VALUES(1,'Audi',52642)")
+cur.execute("INSERT INTO Cars VALUES(2,'Mercedes',57127)")
+</pre>
+
+<p>
+These two lines insert two cars into the table. Using the <code>with</code>
+keyword, the changes are automatically committed. Otherwise, we would have
+to commit them manually.
+</p>
+
+<pre>sqlite&gt; .mode column  
+sqlite&gt; .headers on
+</pre>
+
+<p>
+We verify the written data with the sqlite3 tool. First we modify the
+way the data is displayed in the console. We use the column mode and
+turn on the headers. 
+</p>
+
+<pre>sqlite&gt; SELECT * FROM Cars;
+Id          Name        Price     
+----------  ----------  ----------
+1           Audi        52642     
+2           Mercedes    57127     
+3           Skoda       9000      
+4           Volvo       29000     
+5           Bentley     350000    
+6           Citroen     21000     
+7           Hummer      41400     
+8           Volkswagen  21600 
+</pre>
+
+<p>
+This is the data that we have written to the Cars table.
+</p>
+
+<hr/>
+
+<p>
+We are going to create the same table. This time using the convenience
+<code>executemany()</code> method. 
+</p>
+
+<pre>#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+import sqlite3 as lite
+import sys
+
+cars = (
+    (1, 'Audi', 52642),
+    (2, 'Mercedes', 57127),
+    (3, 'Skoda', 9000),
+    (4, 'Volvo', 29000),
+    (5, 'Bentley', 350000),
+    (6, 'Hummer', 41400),
+    (7, 'Volkswagen', 21600)
+)
+
+
+con = lite.connect('test.db')
+
+with con:
+    
+    cur = con.cursor()    
+    
+    cur.execute("DROP TABLE IF EXISTS Cars")
+    cur.execute("CREATE TABLE Cars(Id INT, Name TEXT, Price INT)")
+    cur.executemany("INSERT INTO Cars VALUES(?, ?, ?)", cars)
+</pre>
+
+<p>
+This script drops a Cars table if it exists and (re)creates it.
+</p>
+
+<pre>cur.execute("DROP TABLE IF EXISTS Cars")
+cur.execute("CREATE TABLE Cars(Id INT, Name TEXT, Price INT)")
+</pre>
+
+<p>
+The first SQL statement drops the Cars table, if it exists. The second
+SQL statement creates the Cars table. 
+</p>
+
+<pre>cur.executemany("INSERT INTO Cars VALUES(?, ?, ?)", cars)
+</pre>
+
+<p>
+We insert 8 rows into the table using the convenience <code>executemany()</code> method. 
+The first parameter of this method is a parameterized SQL statement. The second
+parameter is the data, in the form of tuple of tuples. 
+</p>
+
+<hr/>
+
+<p>
+We provide another way to create our Cars table. We commit the changes manually
+and provide our own error handling. 
+</p>
+
+<pre>#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+import sqlite3 as lite
+import sys
+
+try:
+    con = lite.connect('test.db')
+
+    cur = con.cursor()  
+
+    cur.executescript("""
+        DROP TABLE IF EXISTS Cars;
+        CREATE TABLE Cars(Id INT, Name TEXT, Price INT);
+        INSERT INTO Cars VALUES(1,'Audi',52642);
+        INSERT INTO Cars VALUES(2,'Mercedes',57127);
+        INSERT INTO Cars VALUES(3,'Skoda',9000);
+        INSERT INTO Cars VALUES(4,'Volvo',29000);
+        INSERT INTO Cars VALUES(5,'Bentley',350000);
+        INSERT INTO Cars VALUES(6,'Citroen',21000);
+        INSERT INTO Cars VALUES(7,'Hummer',41400);
+        INSERT INTO Cars VALUES(8,'Volkswagen',21600);
+        """)
+
+    con.commit()
+    
+except lite.Error, e:
+    
+    if con:
+        con.rollback()
+        
+    print "Error %s:" % e.args[0]
+    sys.exit(1)
+    
+finally:
+    
+    if con:
+        con.close() 
+</pre>
+
+<p>
+In the above script we (re)create the Cars table using the 
+<code>executescript()</code> method. 
+</p>
+
+<pre>cur.executescript("""
+    DROP TABLE IF EXISTS Cars;
+    CREATE TABLE Cars(Id INT, Name TEXT, Price INT);
+    INSERT INTO Cars VALUES(1,'Audi',52642);
+    INSERT INTO Cars VALUES(2,'Mercedes',57127);
+...
+</pre>
+
+<p>
+The <code>executescript()</code> method allows us to execute the
+whole SQL code in one step. 
+</p>
+
+<pre>con.commit()
+</pre>
+
+<p>
+Without the <code>with</code> keyword, the changes must be
+committed using the <code>commit()</code> method.
+</p>
+
+<pre>except lite.Error, e:
+    
+    if con:
+        con.rollback()
+        
+    print "Error %s:" % e.args[0]
+    sys.exit(1)
+</pre>
+
+<p>
+In case of an error, the changes are rolled back and
+an error message is printed to the terminal.
+</p>
+
+
+<h2>The last inserted row id</h2>
+
+<p>
+Sometimes, we need to determine the id of the last inserted
+row. In Python SQLite, we use the <code>lastrowid</code> attribute
+of the cursor object. 
+</p>
+
+
+<pre>#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+import sqlite3 as lite
+import sys
+
+con = lite.connect(':memory:')
+
+with con:
+    
+    cur = con.cursor()    
+    cur.execute("CREATE TABLE Friends(Id INTEGER PRIMARY KEY, Name TEXT);")
+    cur.execute("INSERT INTO Friends(Name) VALUES ('Tom');")
+    cur.execute("INSERT INTO Friends(Name) VALUES ('Rebecca');")
+    cur.execute("INSERT INTO Friends(Name) VALUES ('Jim');")
+    cur.execute("INSERT INTO Friends(Name) VALUES ('Robert');")
+        
+    lid = cur.lastrowid
+    print "The last Id of the inserted row is %d" % lid
+</pre>
+
+<p>
+We create a Friends table in memory. The Id is automatically incremented. 
+</p>
+
+<pre>cur.execute("CREATE TABLE Friends(Id INTEGER PRIMARY KEY, Name TEXT);")
+</pre>
+
+<p>
+In SQLite, <code>INTEGER PRIMARY KEY</code> column is auto incremented. 
+There is also an <code>AUTOINCREMENT</code> keyword. When used in 
+<code>INTEGER PRIMARY KEY AUTOINCREMENT</code> a slightly different algorithm
+for Id creation is used. 
+</p>
+
+<pre>cur.execute("INSERT INTO Friends(Name) VALUES ('Tom');")
+cur.execute("INSERT INTO Friends(Name) VALUES ('Rebecca');")
+cur.execute("INSERT INTO Friends(Name) VALUES ('Jim');")
+cur.execute("INSERT INTO Friends(Name) VALUES ('Robert');")
+</pre>
+
+<p>
+These four SQL statements insert four rows into the Friends table. 
+</p>
+
+<pre>lid = cur.lastrowid
+</pre>
+
+<p>
+Using the <code>lastrowid</code> we get the last inserted row id.  
+</p>
+
+<pre>$ ./autoinc.py
+The last Id of the inserted row is 4
+</pre>
+
+<p>
+We see the output of the script. 
+</p>
+
+
+<h2>Retrieving data</h2>
+
+<p>
+Now, that we have inserted some data into the database, 
+we want to get it back.
+</p>
+
+
+<pre>#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+import sqlite3 as lite
+import sys
+
+
+con = lite.connect('test.db')
+
+with con:    
+    
+    cur = con.cursor()    
+    cur.execute("SELECT * FROM Cars")
+
+    rows = cur.fetchall()
+
+    for row in rows:
+        print row
+</pre>
+
+<p>
+In this example, we retrieve all data from the Cars table.
+</p>
+
+<pre>cur.execute("SELECT * FROM Cars")
+</pre>
+
+<p>
+This SQL statement selects all data from the Cars table.
+</p>
+
+<pre>rows = cur.fetchall()
+</pre>
+
+<p>
+The <code>fetchall()</code> method gets all records. It returns 
+a result set. Technically, it is a tuple of tuples. Each of the inner tuples 
+represent a row in the table.
+</p>
+
+<pre>for row in rows:
+    print row
+</pre>
+
+<p>
+We print the data to the console, row by row.
+</p>
+
+<pre>$ ./retrieveall.py
+(1, u'Audi', 52642)
+(2, u'Mercedes', 57127)
+(3, u'Skoda', 9000)
+(4, u'Volvo', 29000)
+(5, u'Bentley', 350000)
+(6, u'Citroen', 21000)
+(7, u'Hummer', 41400)
+(8, u'Volkswagen', 21600)
+</pre>
+
+<p>
+This is the output of the example.
+</p>
+
+<hr/>
+
+<p>
+Returning all data at a time may not be feasible. We can fetch rows one by one.
+</p>
+
+<pre>#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+import sqlite3 as lite
+import sys
+
+con = lite.connect('test.db')
+
+with con:
+    
+    cur = con.cursor()    
+    cur.execute("SELECT * FROM Cars")
+
+    while True:
+      
+        row = cur.fetchone()
+        
+        if row == None:
+            break
+            
+        print row[0], row[1], row[2]
+</pre>
+
+<p>
+In this script we connect to the database and fetch the rows
+of the Cars table one by one. 
+</p>
+
+<pre>while True:
+</pre>
+
+<p>
+We access the data from the while loop. When we read the last row,
+the loop is terminated.
+</p>
+
+<pre>row = cur.fetchone()
+
+if row == None:
+    break
+</pre>
+
+<p>
+The <code>fetchone()</code> method returns the next row from 
+the table. If there is no more data left, it returns <code>None</code>. 
+In this case we break the loop.
+</p>
+
+<pre>print row[0], row[1], row[2]
+</pre>
+
+<p>
+The data is returned in the form of a tuple. Here we select 
+records from the tuple. The first is the Id, the second
+is the car name and the third is the price of the car.
+</p>
+
+
+<pre>$ ./retrieveonebyone.py
+1 Audi 52642
+2 Mercedes 57127
+3 Skoda 9000
+4 Volvo 29000
+5 Bentley 350000
+6 Citroen 21000
+7 Hummer 41400
+8 Volkswagen 21600
+</pre>
+
+<p>
+This is the output of the example.
+</p>
+
+
+<h2>The dictionary cursor</h2>
+
+<p>
+The default cursor returns the data in a tuple of tuples. 
+When we use a dictionary cursor, the data is sent in the form of Python dictionaries. 
+This way we can refer to the data by their column names.
+</p>
+
+<pre>#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+import sqlite3 as lite
+
+
+con = lite.connect('test.db')    
+
+with con:
+    
+    con.row_factory = lite.Row
+       
+    cur = con.cursor() 
+    cur.execute("SELECT * FROM Cars")
+
+    rows = cur.fetchall()
+
+    for row in rows:
+        print "%s %s %s" % (row["Id"], row["Name"], row["Price"])
+</pre>
+
+<p>
+In this example, we print the contents of the Cars table 
+using the dictionary cursor.
+</p>
+
+<pre>con.row_factory = lite.Row
+</pre>
+
+<p>
+We select a dictionary cursor. Now we can access records by the names of columns.
+</p>
+
+<pre>for row in rows:
+    print "%s %s %s" % (row["Id"], row["Name"], row["Price"])  
+</pre>
+
+<p>
+The data is accessed by the column names. 
+</p>
+
+
+
+<h2>Parameterized queries</h2>
+
+<p>
+Now we will concern ourselves with parameterized queries. When we 
+use parameterized queries, we use placeholders instead of directly 
+writing the values into the statements. Parameterized queries increase 
+security and performance.
+</p>
+
+<p>
+The Python sqlite3 module supports two types of placeholders. Question
+marks and named placeholders. 
+</p>
+
+<pre>#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+import sqlite3 as lite
+import sys
+
+uId = 1
+uPrice = 62300 
+
+con = lite.connect('test.db')
+
+with con:
+
+    cur = con.cursor()    
+
+    cur.execute("UPDATE Cars SET Price=? WHERE Id=?", (uPrice, uId))        
+    con.commit()
+    
+    print "Number of rows updated: %d" % cur.rowcount
+</pre>
+
+<p>
+We update a price of one car. In this code example, we use the question
+mark placeholders. 
+</p>
+
+<pre>cur.execute("UPDATE Cars SET Price=? WHERE Id=?", (uPrice, uId)) 
+</pre>
+
+<p>
+The question marks (?) are placeholders for values. The values are
+added to the placeholders. 
+</p>
+
+<pre>print "Number of rows updated: %d" % cur.rowcount
+</pre>
+
+<p>
+The <code>rowcount</code> property returns the number of updated 
+rows. In our case one row was updated. 
+</p>
+
+<pre>$ ./prepared.py
+Number of rows updated: 1
+
+Id          Name        Price     
+----------  ----------  ----------
+1           Audi        62300 
+</pre>
+
+<p>
+The price of the car was updated. 
+</p>
+
+<hr/>
+
+<p>
+The second example uses parameterized statements with 
+named placeholders. 
+</p>
+
+<pre>#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+import sqlite3 as lite
+import sys
+
+uId = 4
+
+con = lite.connect('test.db')
+
+with con:
+
+    cur = con.cursor()    
+
+    cur.execute("SELECT Name, Price FROM Cars WHERE Id=:Id", 
+        {"Id": uId})        
+    con.commit()
+    
+    row = cur.fetchone()
+    print row[0], row[1]
+</pre>
+
+<p>
+We select a name and a price of a car using named placeholders. 
+</p>
+
+<pre>cur.execute("SELECT Name, Price FROM Cars WHERE Id=:Id", 
+    {"Id": uId})   
+</pre>
+
+<p>
+The named placeholders start with a colon character. 
+</p>
+
+
+<h2>Inserting images</h2>
+
+<p>
+In this section, we are going to insert an image to the 
+SQLite database. Note that some people argue against putting 
+images into databases. Here we only show how to do it. We do not
+dwell into technical issues of whether to save images in
+databases or not. 
+</p>
+
+<pre>sqlite&gt; CREATE TABLE Images(Id INTEGER PRIMARY KEY, Data BLOB);
+</pre>
+
+<p>
+For this example, we create a new table called Images. For the images, we use
+the <code>BLOB</code> data type, which stands for Binary Large Objects. 
+</p>
+
+
+<pre>#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+import sqlite3 as lite
+import sys
+
+
+def readImage():
+
+    try:
+        fin = open("woman.jpg", "rb")
+        img = fin.read()
+        return img
+        
+    except IOError, e:
+
+        print "Error %d: %s" % (e.args[0],e.args[1])
+        sys.exit(1)
+
+    finally:
+        
+        if fin:
+            fin.close()
+
+
+try:
+    con = lite.connect('test.db')
+    
+    cur = con.cursor()
+    data = readImage()
+    binary = lite.Binary(data)
+    cur.execute("INSERT INTO Images(Data) VALUES (?)", (binary,) )
+
+    con.commit()    
+    
+except lite.Error, e:
+    
+    if con:
+        con.rollback()
+        
+    print "Error %s:" % e.args[0]
+    sys.exit(1)
+    
+finally:
+    
+    if con:
+        con.close()  
+</pre>
+
+<p>
+In this script, we read an image from the current working directory 
+and write it into the Images table of the SQLite test.db database. 
+</p>
+
+<pre>try:
+    fin = open("woman.jpg", "rb")
+    img = fin.read()
+    return img
+</pre>
+
+<p>
+We read binary data from the filesystem. We have a jpg image
+called woman.jpg. 
+</p>
+
+<pre>binary = lite.Binary(data)
+</pre>
+
+<p>
+The data is encoded using the SQLite <code>Binary</code> object. 
+</p>
+
+<pre>cur.execute("INSERT INTO Images(Data) VALUES (?)", (binary,) )
+</pre>
+
+<p>
+This SQL statement is used to insert the image into the database. 
+</p>
+
+
+<h2>Reading images</h2>
+
+<p>
+In this section, we are going to perform the reverse operation.
+We will read an image from the database table. 
+</p>
+
+<pre>#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+import sqlite3 as lite
+import sys
+
+
+def writeImage(data):
+    
+    try:
+        fout = open('woman2.jpg','wb')
+        fout.write(data)
+    
+    except IOError, e:    
+        print "Error %d: %s" % (e.args[0], e.args[1])
+        sys.exit(1)
+        
+    finally:
+        
+        if fout:
+            fout.close()       
+    
+
+try:
+    con = lite.connect('test.db')
+    
+    cur = con.cursor()    
+    cur.execute("SELECT Data FROM Images LIMIT 1")
+    data = cur.fetchone()[0]
+    
+    writeImage(data)
+
+    
+except lite.Error, e:
+    
+    print "Error %s:" % e.args[0]
+    sys.exit(1)
+    
+finally:
+    
+    if con:
+        con.close()      
+</pre>
+
+<p>
+We read image data from the Images table and write it
+to another file, which we call woman2.jpg. 
+</p>
+
+<pre>try:
+    fout = open('woman2.jpg','wb')
+    fout.write(data)
+</pre>
+
+<p>
+We open a binary file in a writing mode. The data
+from the database is written to the file. 
+</p>
+
+<pre>cur.execute("SELECT Data FROM Images LIMIT 1")
+data = cur.fetchone()[0]
+</pre>
+
+<p>
+These two lines select and fetch data from the Images
+table. We obtain the binary data from the first row. 
+</p>
+
+
+<h2>Metadata</h2>
+
+<p>
+Metadata is information about the data in the database. 
+Metadata in a SQLite contains information about the tables 
+and columns, in which we store data. Number of rows affected 
+by an SQL statement is a metadata. Number of rows and columns returned 
+in a result set belong to metadata as well.
+</p>
+
+<p>
+Metadata in SQLite can be obtained using the <code>PRAGMA</code> command. 
+SQLite objects may have attributes, which are metadata. Finally, we can
+also obtain specific metatada from querying the SQLite system 
+<code>sqlite_master</code> table. 
+</p>
+
+<pre>#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+import sqlite3 as lite
+import sys
+
+con = lite.connect('test.db')
+
+with con:
+    
+    cur = con.cursor()    
+    
+    cur.execute('PRAGMA table_info(Cars)')
+    
+    data = cur.fetchall()
+    
+    for d in data:
+        print d[0], d[1], d[2]
+</pre>
+
+<p>
+In this example, we issue the <code>PRAGMA table_info(tableName)</code> command, 
+to get some metadata info about our Cars table. 
+</p>
+
+<pre>cur.execute('PRAGMA table_info(Cars)')
+</pre>
+
+<p>
+The <code>PRAGMA table_info(tableName)</code> command returns one row for each 
+column in the Cars table. Columns in the result set include the column order number,
+column name, data type, whether or not the column can be NULL, 
+and the default value for the column.
+</p>
+
+<pre>for d in data:
+    print d[0], d[1], d[2]
+</pre>
+
+<p>
+From the provided information, we print the column order number, column name
+and column data type. 
+</p>
+
+<pre>$ ./colnames1.py
+0 Id INT
+1 Name TEXT
+2 Price INT
+</pre>
+
+<p>
+Output of the example. 
+</p>
+
+
+<hr/>
+
+<p>
+Next we will print all rows from the Cars table with their column names.
+</p>
+
+<pre>#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+import sqlite3 as lite
+import sys
+
+con = lite.connect('test.db')
+
+with con:
+    
+    cur = con.cursor()    
+    cur.execute('SELECT * FROM Cars')
+    
+    col_names = [cn[0] for cn in cur.description]
+    
+    rows = cur.fetchall()
+    
+    print "%s %-10s %s" % (col_names[0], col_names[1], col_names[2])
+
+    for row in rows:    
+        print "%2s %-10s %s" % row
+</pre>
+
+<p>
+We print the contents of the Cars table to the console. 
+Now, we include the names of the columns too. The records are aligned
+with the column names. 
+</p>
+
+<pre>col_names = [cn[0] for cn in cur.description]
+</pre>
+
+<p>
+We get the column names from the <code>description</code> property
+of the cursor object. 
+</p>
+
+<pre>print "%s %-10s %s" % (col_names[0], col_names[1], col_names[2])
+</pre>
+
+<p>
+This line prints three column names of the Cars table. 
+</p>
+
+<pre>for row in rows:    
+    print "%2s %-10s %s" % row
+</pre>
+
+<p>
+We print the rows using the for loop. The data
+is aligned with the column names. 
+</p>
+
+<pre>$ ./colnames2.py
+Id Name       Price
+ 1 Audi       52642
+ 2 Mercedes   57127
+ 3 Skoda      9000
+ 4 Volvo      29000
+ 5 Bentley    350000
+ 6 Citroen    21000
+ 7 Hummer     41400
+ 8 Volkswagen 21600
+</pre>
+
+<p>
+Output. 
+</p>
+
+<hr/>
+
+<p>
+In our last example related to the metadata, we will 
+list all tables in the test.db database. 
+</p>
+
+<pre>#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+import sqlite3 as lite
+import sys
+
+con = lite.connect('test.db')
+
+with con:
+    
+    cur = con.cursor()    
+    cur.execute("SELECT name FROM sqlite_master WHERE type='table'")
+
+    rows = cur.fetchall()
+
+    for row in rows:
+        print row[0]
+</pre>
+
+<p>
+The code example prints all available tables in the current database
+to the terminal. 
+</p>
+
+<pre>cur.execute("SELECT name FROM sqlite_master WHERE type='table'")
+</pre>
+
+<p>
+The table names are stored inside the system <code>sqlite_master</code> table.
+</p>
+
+<pre>$ ./listtables.py
+Images
+sqlite_sequence
+Salaries
+Cars
+</pre>
+
+<p>
+These were the tables on my system. 
+</p>
+
+
+<h2>Export and import of data</h2>
+
+<p>
+We can dump data in an SQL format to create a simple backup of
+our database tables. 
+</p>
+
+<pre>#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+import sqlite3 as lite
+import sys
+
+cars = (
+    (1, 'Audi', 52643),
+    (2, 'Mercedes', 57642),
+    (3, 'Skoda', 9000),
+    (4, 'Volvo', 29000),
+    (5, 'Bentley', 350000),
+    (6, 'Hummer', 41400),
+    (7, 'Volkswagen', 21600)
+)
+
+def writeData(data):
+    
+    f = open('cars.sql', 'w')
+    
+    with f:
+        f.write(data)
+
+
+con = lite.connect(':memory:')
+
+with con:
+    
+    cur = con.cursor()
+    
+    cur.execute("DROP TABLE IF EXISTS Cars")
+    cur.execute("CREATE TABLE Cars(Id INT, Name TEXT, Price INT)")
+    cur.executemany("INSERT INTO Cars VALUES(?, ?, ?)", cars)
+    cur.execute("DELETE FROM Cars WHERE Price &lt; 30000")
+    
+    data = '\n'.join(con.iterdump())
+    
+    writeData(data)
+</pre>
+
+<p>
+In the above example, we recreate the Cars table in the memory. We delete
+some rows from the table and dump the current state of the table 
+into a cars.sql file. This file can serve as a current backup of the table.
+</p>
+
+<pre>def writeData(data):
+    
+    f = open('cars.sql', 'w')
+    
+    with f:
+        f.write(data)
+</pre>
+
+<p>
+The data from the table is being written to the file. 
+</p>
+
+<pre>con = lite.connect(':memory:')
+</pre>
+
+<p>
+We create a temporary table in the memory. 
+</p>
+
+<pre>cur.execute("DROP TABLE IF EXISTS Cars")
+cur.execute("CREATE TABLE Cars(Id INT, Name TEXT, Price INT)")
+cur.executemany("INSERT INTO Cars VALUES(?, ?, ?)", cars)
+cur.execute("DELETE FROM Cars WHERE Price &lt; 30000")
+</pre>
+
+<p>
+These lines create a Cars table, insert values and delete rows,
+where the Price is less than 30000 units. 
+</p>
+
+<pre>data = '\n'.join(con.iterdump())
+</pre>
+
+<p>
+The <code>con.iterdump()</code> returns an iterator to dump the 
+database in an SQL text format. The built-in <code>join()</code>
+function takes the iterator and joins all the strings in the iterator
+separated by a new line. This data is written to the cars.sql file
+in the writeData() function.
+</p>
+
+<pre>$ cat cars.sql 
+BEGIN TRANSACTION;
+CREATE TABLE Cars(Id INT, Name TEXT, Price INT);
+INSERT INTO "Cars" VALUES(1,'Audi',52643);
+INSERT INTO "Cars" VALUES(2,'Mercedes',57642);
+INSERT INTO "Cars" VALUES(5,'Bentley',350000);
+INSERT INTO "Cars" VALUES(6,'Hummer',41400);
+COMMIT;
+</pre>
+
+<p>
+The contents of the dumped in-memory Cars table. 
+</p>
+
+<hr/>
+
+<p>
+Now we are going to perform a reverse operation. We will import
+the dumped table back into memory. 
+</p>
+
+<pre>#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+import sqlite3 as lite
+import sys
+
+
+def readData():
+    
+    f = open('cars.sql', 'r')
+    
+    with f:
+        data = f.read()
+        return data
+        
+
+con = lite.connect(':memory:')
+
+with con:   
+
+    cur = con.cursor()
+    
+    sql = readData()
+    cur.executescript(sql)
+    
+    cur.execute("SELECT * FROM Cars")
+    
+    rows = cur.fetchall()
+    
+    for row in rows:
+        print row    
+</pre>
+
+<p>
+In this script, we read the contents of the cars.sql file
+and execute it. This will recreate the dumped table.
+</p>
+
+<pre>def readData():
+    
+    f = open('cars.sql', 'r')
+    
+    with f:
+        data = f.read()
+        return data
+</pre>
+
+<p>
+Inside the readData() method we read the contents of the cars.sql table. 
+</p>
+
+<pre>cur.executescript(sql)
+</pre>
+
+<p>
+We call the <code>executescript()</code> method
+to launch the SQL script. 
+</p>
+
+<pre>cur.execute("SELECT * FROM Cars")
+
+rows = cur.fetchall()
+
+for row in rows:
+    print row    
+</pre>
+
+<p>
+We verify the data.
+</p>
+
+<pre>$ ./import.py
+(1, u'Audi', 52643)
+(2, u'Mercedes', 57642)
+(5, u'Bentley', 350000)
+(6, u'Hummer', 41400)
+</pre>
+
+<p>
+The output shows, that we have successfully 
+recreated the saved Cars table. 
+</p>
+
+
+<h2>Transactions</h2>
+
+<p>
+A transaction is an atomic unit of database operations against 
+the data in one or more databases. The effects of all the SQL 
+statements in a transaction can be either all committed 
+to the database or all rolled back.
+</p>
+
+<p>
+In SQLite, any command other than the SELECT will start an implicit 
+transaction. Also, within a transaction a command like CREATE TABLE ..., 
+VACUUM, PRAGMA, will commit previous changes before executing.
+</p>
+
+<p>
+Manual transactions are started with the 
+BEGIN TRANSACTION statement and finished with the 
+COMMIT OR ROLLBACK statements.
+</p>
+
+<p>
+SQLite supports three non-standard transaction levels. DEFERRED, 
+IMMEDIATE and EXCLUSIVE. SQLite Python module also supports an autocommit mode,
+where  all changes to the tables are immediately effective.
+</p>
+
+<pre>#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+import sqlite3 as lite
+import sys
+
+
+try:
+    con = lite.connect('test.db')
+    cur = con.cursor()    
+    cur.execute("DROP TABLE IF EXISTS Friends")
+    cur.execute("CREATE TABLE Friends(Id INTEGER PRIMARY KEY, Name TEXT)")
+    cur.execute("INSERT INTO Friends(Name) VALUES ('Tom')")
+    cur.execute("INSERT INTO Friends(Name) VALUES ('Rebecca')")
+    cur.execute("INSERT INTO Friends(Name) VALUES ('Jim')")
+    cur.execute("INSERT INTO Friends(Name) VALUES ('Robert')")
+    
+    #con.commit()
+            
+except lite.Error, e:
+    
+    if con:
+        con.rollback()
+    
+    print "Error %s:" % e.args[0]
+    sys.exit(1)
+    
+finally:
+    
+    if con:
+        con.close() 
+</pre>
+
+<p>
+We create a Friends table and try to fill it with data. However, as we will see,
+the data is not committed. 
+</p>
+
+<pre>#con.commit()
+</pre>
+
+<p>
+The <code>commit()</code> method is commented. If we uncomment the
+line, the data will be written to the table. 
+</p>
+
+<pre>sqlite&gt; .tables
+Cars       Friends    Images     Salaries   Temporary
+
+sqlite&gt; SELECT Count(Id) FROM Friends;
+Count(Id) 
+----------
+0     
+</pre>
+
+<p>
+The table is created but the data is not written to the
+table. 
+</p>
+
+<hr/>
+
+<p>
+In the second example we demonstrate, that some commands 
+implicitly commit previous changes to the database. 
+</p>
+
+<pre>#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+import sqlite3 as lite
+import sys
+
+
+try:
+    con = lite.connect('test.db')
+    cur = con.cursor()    
+    cur.execute("DROP TABLE IF EXISTS Friends")
+    cur.execute("CREATE TABLE Friends(Id INTEGER PRIMARY KEY, Name TEXT)")
+    cur.execute("INSERT INTO Friends(Name) VALUES ('Tom')")
+    cur.execute("INSERT INTO Friends(Name) VALUES ('Rebecca')")
+    cur.execute("INSERT INTO Friends(Name) VALUES ('Jim')")
+    cur.execute("INSERT INTO Friends(Name) VALUES ('Robert')")
+
+    cur.execute("CREATE TABLE IF NOT EXISTS Temporary(Id INT)")
+            
+except lite.Error, e:
+    
+    if con:
+        con.rollback()
+    
+    print "Error %s:" % e.args[0]
+    sys.exit(1)
+    
+finally:
+    
+    if con:
+        con.close() 
+</pre>
+
+<p>
+Again, we do not call the <code>commit()</code> command explicitly. But
+this time, the data is written to the Friends table. 
+</p>
+
+<pre>cur.execute("CREATE TABLE IF NOT EXISTS Temporary(Id INT)")
+</pre>
+
+<p>
+This SQL statement will create a new table. It also commits 
+the previous changes.
+</p>
+
+<pre>$ ./implcommit.py 
+
+sqlite&gt; SELECT * FROM Friends;
+Id          Name      
+----------  ----------
+1           Tom       
+2           Rebecca   
+3           Jim       
+4           Robert    
+
+</pre>
+
+<p>
+The data has been written to the Friends table.
+</p>
+
+<hr/>
+
+<p>
+In the autocommit mode, an SQL statement is executed immediately.
+</p>
+
+<pre>#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+import sqlite3 as lite
+import sys
+
+
+try:
+    con = lite.connect('test.db', isolation_level=None)
+    cur = con.cursor()    
+    cur.execute("DROP TABLE IF EXISTS Friends")
+    cur.execute("CREATE TABLE Friends(Id INTEGER PRIMARY KEY, Name TEXT)")
+    cur.execute("INSERT INTO Friends(Name) VALUES ('Tom')")
+    cur.execute("INSERT INTO Friends(Name) VALUES ('Rebecca')")
+    cur.execute("INSERT INTO Friends(Name) VALUES ('Jim')")
+    cur.execute("INSERT INTO Friends(Name) VALUES ('Robert')")
+
+    
+except lite.Error, e:    
+    
+    print "Error %s:" % e.args[0]
+    sys.exit(1)
+    
+finally:
+    
+    if con:
+        con.close() 
+</pre>
+
+<p>
+In this example, we connect to the database in the autocommit mode. 
+</p>
+
+<pre>con = lite.connect('test.db', isolation_level=None)
+</pre>
+
+<p>
+We have an autocommit mode, when we set the <code>isolation_level</code> to
+None.
+</p>
+
+<pre>$ ./autocommit.py
+
+sqlite&gt; SELECT * FROM Friends;
+Id          Name      
+----------  ----------
+1           Tom       
+2           Rebecca   
+3           Jim       
+4           Robert  
+</pre>
+
+<p>
+The data was successfully committed to the Friends table. 
+</p>
+
+
+<p>
+This was SQLite Python tutorial. ZetCode has a complete e-book for SQLite Python:<br/>
+<a href="http://zetcode.com/ebooks/sqlitepython/" target="_blank">SQLite Python e-book</a>. 
+</p>
+
+
+
+
+
+
+
+<div>
+<div>
+<a href="http://zetcode.com/" target="_blank">ZetCode</a> last modified January 6, 2013  © 2007 - 2013 Jan Bodnar
+</div>
+
+
+</div></div></div></div><br/></body></html>
