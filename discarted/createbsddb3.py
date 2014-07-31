@@ -1,6 +1,8 @@
 #!/usr/bin/python
+# -*- coding: utf-8 -*-
 
 from bsddb3 import db                   # the Berkeley db data base
+import time
 
 # Part 1: Create database and insert 4 elements
 #
@@ -16,10 +18,16 @@ fruitDB.open(filename, None, db.DB_HASH, db.DB_CREATE)
 print '\t', db.DB_VERSION_STRING
 
 # Insert new elements in database 
-fruitDB.put("apple","red")
-fruitDB.put("orange","orange")
-fruitDB.put("banana","yellow")
-fruitDB.put("tomato","red")
+timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
+
+fruitDB.put(timestamp,"apple","red")
+
+timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
+fruitDB.put(timestamp,"orange","orange")
+timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
+fruitDB.put(timestamp,"banana","yellow")
+timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
+fruitDB.put(timestamp,"tomato","red")
 
 # Close database
 fruitDB.close()
