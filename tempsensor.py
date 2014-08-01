@@ -28,7 +28,6 @@
 # SOFTWARE.
 import Adafruit_DHT
 import time
-import datetime
 
 # Sensor should be set to Adafruit_DHT.DHT11,
 # Adafruit_DHT22, or Adafruit_DTH.AM2302.
