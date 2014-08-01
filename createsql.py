@@ -16,8 +16,8 @@ try:
     cur = con.cursor()  
 
     cur.executescript("""
-        DROP TABLE IF EXISTS Cars;
-        CREATE TABLE Cars(Id INT, Data TEXT, Temp REAL, Hum REAL );
+        DROP TABLE IF EXISTS temps;
+        CREATE TABLE temps( data TEXT PRIMARY KEY, temp REAL, hum REAL );
         """)
 
     con.commit()
