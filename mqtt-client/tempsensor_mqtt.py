@@ -24,6 +24,8 @@
 # out oF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # softwARE.
 
+# https://www.eclipse.org/paho/clients/python/docs/
+
 import Adafruit_DHT
 import time
 import sqlite3 as lite
@@ -35,10 +37,10 @@ import random
 
 # mqtt broker info:
 #broker = "192.168.2.69"
-broker = "192.168.1.30"
-clientid="Silmak/"+str(random.randint(1000,9999))
-sensorTemp="Estudi/temp/1"
-sensorHum="Estudi/hum/1"
+broker     = "192.168.1.30"
+clientId   = "Silmak/" + str(random.randint(1000,9999))
+sensorTemp = "estudi/temp/1"
+sensorHum  = "estudi/hum/1"
 
 # Sensor should be set to Adafruit_DHT.DHT11,
 # Adafruit_DHT22, or Adafruit_DTH.AM2302.
@@ -85,7 +87,7 @@ if humidity is not None and temperature is not None:
             now = datetime.datetime.now()
             hora = now.strftime("%Y-%m-%d %H:%M:%S")
         
-            print broker + " | " + clientId + " | " + hora + " : " + temperature +"C " + humidity + "%"
+            print broker + " | " + clientId + " | " + hora + " : " + sensorTemp + str(temperature) +"C " + sensorHum + "/" +str(humidity) + " %"
         
             publish.single(sensorTemp, temperature, hostname = broker, client_id= clientId, will=None, auth=None, tls=None)
             publish.single(sensorHum, humidity, hostname = broker, client_id= clientId, will=None, auth=None, tls=None)
