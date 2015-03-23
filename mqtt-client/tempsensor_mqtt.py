@@ -26,21 +26,28 @@
 
 # https://www.eclipse.org/paho/clients/python/docs/
 
+# TODO
+# * Add protection from sensor error readings (Â X % last value)
+# * Move settings to a external file
+# * Capture signal handling (^C and friends)
+# * Write logs somewhere?
+# * Daemonize?
+
+
 import Adafruit_DHT
 import time
-import sqlite3 as lite
-import sys
 import paho.mqtt.publish as publish
 import datetime
 import random
 
 
 # mqtt broker info:
-#broker = "192.168.2.69"
-broker     = "192.168.1.30"
-clientId   = "Silmak/" + str(random.randint(1000,9999))
-sensorTemp = "estudi/temp/1"
-sensorHum  = "estudi/hum/1"
+#brokerIP   = "192.168.2.69"
+brokerIP   = "192.168.1.30" # Broker adress
+clientId   = "Silmak/" + str(random.randint(1000,9999)) 
+sensorTemp = "estudi/temp/1" # Temperature topic
+sensorHum  = "estudi/hum/1" # Humidity topic
+sleepTime  = 60 # Time in seconds between sensor reading
 
 # Sensor should be set to Adafruit_DHT.DHT11,
 # Adafruit_DHT22, or Adafruit_DTH.AM2302.
@@ -50,50 +57,26 @@ sensor = Adafruit_DHT.AM2302
 # connected to pin 23.
 pin = 4
 
-# Try to grab a sensor reading.  Use the read_retry method which will retry up
+while True:
+    # Try to grab a sensor reading.  Use the read_retry method which will retry up
 # to 15 times to get a sensor reading (waiting 2 seconds between each retry).
-humidity, temperature = Adafruit_DHT.read_retry(sensor, pin)
+        humidity, temperature = Adafruit_DHT.read_retry(sensor, pin)
 
 # Note that sometimes you won't get a reading and
 # the results will be null (because Linux can't
 # guarantee the timing of calls to read the sensor).  
 # If this happens try again!
-if humidity is not None and temperature is not None:
-     #print  time.strftime("%Y-%m-%d %H:%M:%S") + ' Temp={0:0.1f}*C  Humidity={1:0.1f}%'.format(temperature, humidity)
-#     try:
-#        con = lite.connect('temps.db')
-#
-#        cur = con.cursor()
-#        # insert into temps(data, temp,uum) values("2014-08-01 11:10:00",'27,4','40,3');
-#        data = "INSERT INTO temps(data, temp, hum) VALUES (\"" + time.strftime("%Y-%m-%d %H:%M:%S") + "\",'{0:0.1f}','{1:0.1f}')".format(temperature, humidity)
-#        print data
-#        cur.execute(data)
-#
-#        con.commit()
-#     except lite.Error, e:
-#        if con:
-#            con.rollback()
-#            
-#        print "Error %s:" % e.args[0]
-#        sys.exit(1)
-#     finally:
-#        if con:
-#            con.close() 
-#          
-#else:
-#     print 'Failed to get reading. Try again!'
+        if humidity is not None and temperature is not None:
 
-        while True:
             now = datetime.datetime.now()
             hora = now.strftime("%Y-%m-%d %H:%M:%S")
-        
-            print broker + " | " + clientId + " | " + hora + " : " + sensorTemp + str(temperature) +"C " + sensorHum + "/" +str(humidity) + " %"
-        
-            publish.single(sensorTemp, temperature, hostname = broker, client_id= clientId, will=None, auth=None, tls=None)
-            publish.single(sensorHum, humidity, hostname = broker, client_id= clientId, will=None, auth=None, tls=None)
-        
-        
-            time.sleep(5)
-else:
-        print "Failed to get reading. Try again!"
-        time.sleep(5)
+
+            print brokerIP + " | " + clientId + " | " + hora + " : " + sensorTemp + "/" + str(temperature) +" C " + sensorHum + "/" + str(humidity) + " %"
+
+            publish.single(sensorTemp, temperature, hostname = brokerIP, client_id= clientId, will=None, auth=None, tls=None)
+            publish.single(sensorHum, humidity, hostname = brokerIP, client_id= clientId, will=None, auth=None, tls=None)
+
+            time.sleep(sleepTime)
+        else:
+            print "Failed to get reading. Try again!"
+            time.sleep(sleepTime)
