@@ -27,9 +27,9 @@
 # https://www.eclipse.org/paho/clients/python/docs/
 
 # TODO
-# * Add protection from sensor error readings (Â X % last value)
+# * Add protection from sensor error readings (Ã‚ X % last value)
 # * Move settings to a external file
-# ** https://wiki.python.org/moin/ConfigParserExamples
+# ** http://pymotw.com/2/ConfigParser/index.html
 # * Capture signal handling (^C and friends)
 # * Write logs somewhere?
 # * Daemonize?
