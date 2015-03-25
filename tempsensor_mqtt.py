@@ -29,6 +29,7 @@
 # TODO
 # * Add protection from sensor error readings (Â X % last value)
 # * Move settings to a external file
+# ** https://wiki.python.org/moin/ConfigParserExamples
 # * Capture signal handling (^C and friends)
 # * Write logs somewhere?
 # * Daemonize?
@@ -39,28 +40,59 @@ import time
 import paho.mqtt.publish as publish
 import datetime
 import random
+import ConfigParser
+from ConfigParser import SafeConfigParser
 
+Config = SafeConfigParser()
+#Config = ConfigParser.SafeConfigParser()
+#Config._interpolation = ConfigParser.ExtendedInterpolation()
+Config.read("tempsensor.cfg")
 
-# mqtt broker info:
-#brokerIP   = "192.168.2.69"
-brokerIP   = "192.168.1.30" # Broker adress
-clientId   = "Silmak/" + str(random.randint(1000,9999)) 
-sensorTemp = "estudi/temp/1" # Temperature topic
-sensorHum  = "estudi/hum/1" # Humidity topic
-sleepTime  = 60 # Time in seconds between sensor reading
+#def ConfigSectionMap(section):
+#    dict1 = {}
+#    options = Config.options(section)
+#    for option in options:
+#        try:
+#            dict1[option] = Config.get(section, option)
+#            if dict1[option] == -1:
+#                DebugPrint("skip: %s" % option)
+#        except:
+#            print("exception on %s!" % option)
+#            dict1[option] = None
+#    return dict1
 
-# Sensor should be set to Adafruit_DHT.DHT11,
-# Adafruit_DHT22, or Adafruit_DTH.AM2302.
-sensor = Adafruit_DHT.AM2302
+#sensorType = int(ConfigSectionMap("Sensor")['sensor'])
+#sensorName = ConfigSectionMap("Sensor")['sensor_name']
+#pin        = int(ConfigSectionMap("Sensor")['pin'])
+#
+#brokerIP   = ConfigSectionMap("Broker")['broker_ip']
+#clientId   = ConfigSectionMap("Broker")['client_id'] + "/" +  str(random.randint(1000,9999))
+#sensorTemp = ConfigSectionMap("Broker")['sensor_temp']
+#sensorHum  = ConfigSectionMap("Broker")['sensor_hum']
+#sleepTime  = float(ConfigSectionMap("Broker")['sleep_time'])
 
-# Example using a Raspberry Pi with DHT sensor
-# connected to pin 23.
-pin = 4
+sensorType = Config.getint('Sensor', 'sensor')
+sensorName = Config.get('Sensor', 'sensor_name')
+pin        = Config.getint('Sensor', 'pin')
 
+brokerIP   = Config.get('Broker', 'broker_ip')
+clientId   = Config.get('Broker', 'client_id') + "/" +  str(random.randint(1000,9999))
+sensorTemp = Config.get('Broker', 'sensor_temp')
+sensorHum  = Config.get('Broker', 'sensor_hum')
+sleepTime  = Config.getfloat('Broker', 'sleep_time')
+
+writeLog   = Config.getboolean('Log','write_log')
+#logName    = ConfigSectionMap("Log")['logname']
+logName    = Config.get('Log', 'logname')
+
+print "Sensor: " + sensorName
+print "Log: " + logName
+
+#
 while True:
     # Try to grab a sensor reading.  Use the read_retry method which will retry up
 # to 15 times to get a sensor reading (waiting 2 seconds between each retry).
-        humidity, temperature = Adafruit_DHT.read_retry(sensor, pin)
+        humidity, temperature = Adafruit_DHT.read_retry(sensorType, pin)
 
 # Note that sometimes you won't get a reading and
 # the results will be null (because Linux can't
@@ -71,10 +103,14 @@ while True:
             now = datetime.datetime.now()
             hora = now.strftime("%Y-%m-%d %H:%M:%S")
 
-            print brokerIP + " | " + clientId + " | " + hora + " : " + sensorTemp + "/" + str(temperature) +" C " + sensorHum + "/" + str(humidity) + " %"
+            log = hora + " | " + clientId + " | " + brokerIP + " : " + sensorTemp + "/" + str(temperature) +" C " + sensorHum + "/" + str(humidity) + " %\n"
 
             publish.single(sensorTemp, temperature, hostname = brokerIP, client_id= clientId, will=None, auth=None, tls=None)
             publish.single(sensorHum, humidity, hostname = brokerIP, client_id= clientId, will=None, auth=None, tls=None)
+
+            if (writeLog) :
+                with open(logName, 'a') as logfile:
+                    logfile.write(log)
 
             time.sleep(sleepTime)
         else:
