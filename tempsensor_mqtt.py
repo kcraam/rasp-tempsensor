@@ -44,32 +44,8 @@ import ConfigParser
 from ConfigParser import SafeConfigParser
 
 Config = SafeConfigParser()
-#Config = ConfigParser.SafeConfigParser()
-#Config._interpolation = ConfigParser.ExtendedInterpolation()
 Config.read("tempsensor.cfg")
 
-#def ConfigSectionMap(section):
-#    dict1 = {}
-#    options = Config.options(section)
-#    for option in options:
-#        try:
-#            dict1[option] = Config.get(section, option)
-#            if dict1[option] == -1:
-#                DebugPrint("skip: %s" % option)
-#        except:
-#            print("exception on %s!" % option)
-#            dict1[option] = None
-#    return dict1
-
-#sensorType = int(ConfigSectionMap("Sensor")['sensor'])
-#sensorName = ConfigSectionMap("Sensor")['sensor_name']
-#pin        = int(ConfigSectionMap("Sensor")['pin'])
-#
-#brokerIP   = ConfigSectionMap("Broker")['broker_ip']
-#clientId   = ConfigSectionMap("Broker")['client_id'] + "/" +  str(random.randint(1000,9999))
-#sensorTemp = ConfigSectionMap("Broker")['sensor_temp']
-#sensorHum  = ConfigSectionMap("Broker")['sensor_hum']
-#sleepTime  = float(ConfigSectionMap("Broker")['sleep_time'])
 
 sensorType = Config.getint('Sensor', 'sensor')
 sensorName = Config.get('Sensor', 'sensor_name')
@@ -85,8 +61,6 @@ writeLog   = Config.getboolean('Log','write_log')
 #logName    = ConfigSectionMap("Log")['logname']
 logName    = Config.get('Log', 'logname')
 
-print "Sensor: " + sensorName
-print "Log: " + logName
 
 #
 while True:
