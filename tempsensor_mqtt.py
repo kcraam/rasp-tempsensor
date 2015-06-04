@@ -42,6 +42,14 @@ import datetime
 import random
 import ConfigParser
 from ConfigParser import SafeConfigParser
+import sys
+
+
+if len(sys.argv) > 2:
+    print "Too much arguments"
+    print "Usage " + str(sys.argv[0]) + "configuration.conf"
+else:
+    cfgfile= str(sys.argv[1])
 
 Config = SafeConfigParser()
 Config.read("tempsensor.cfg")
@@ -53,6 +61,7 @@ pin        = Config.getint('Sensor', 'pin')
 
 brokerIP   = Config.get('Broker', 'broker_ip')
 clientId   = Config.get('Broker', 'client_id') + "/" +  str(random.randint(1000,9999))
+topic      = Config.get('Broker', 'topic')
 sensorTemp = Config.get('Broker', 'sensor_temp')
 sensorHum  = Config.get('Broker', 'sensor_hum')
 sleepTime  = Config.getfloat('Broker', 'sleep_time')
@@ -78,13 +87,17 @@ while True:
             hora = now.strftime("%Y-%m-%d %H:%M:%S")
 
             log = hora + " | " + clientId + " | " + brokerIP + " : " + sensorTemp + "/" + str(temperature) +" C " + sensorHum + "/" + str(humidity) + " %\n"
+            tjson = '{ "type" : "temperature", "value" : ' + str(round(temperature,2)) + ',  "timestamp" : "' + hora + '" }'
+            hjson = '{ "type" : "humidity", "value" : ' + str(round(humidity,2)) + ', "timestamp" : "' + hora + '" }'
 
-            publish.single(sensorTemp, temperature, hostname = brokerIP, client_id= clientId, will=None, auth=None, tls=None)
-            publish.single(sensorHum, humidity, hostname = brokerIP, client_id= clientId, will=None, auth=None, tls=None)
+            publish.single(sensorTemp, round(temperature,2), hostname = brokerIP, client_id= clientId, will=None, auth=None, tls=None)
+            publish.single(sensorHum, round(humidity,2), hostname = brokerIP, client_id= clientId, will=None, auth=None, tls=None)
+            publish.single(topic + "temperature" , tjson, hostname = brokerIP, client_id= clientId, will=None, auth=None, tls=None)
+            publish.single(topic + "humidity" , hjson, hostname = brokerIP, client_id= clientId, will=None, auth=None, tls=None)
 
             if (writeLog) :
                 with open(logName, 'a') as logfile:
-                    logfile.write(log)
+                    logfile.write(tjson + "\n" + hjson + "\n")
 
             time.sleep(sleepTime)
         else:
