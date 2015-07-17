@@ -111,13 +111,28 @@ def info(title):
 if __name__ == '__main__':
     logger.debug('Starting Main')
     info('main line')
-    #p = Process(target=logon, args=('sens.solutions','pool','84.88.95.122','Raspi1'))
     p = Process(target=pcontrol.pControl, args=(org,place,brokerIP,clientId))
     p.start()
 
-    #o = Process(target=mesure, args=('sens.solutions','pool','84.88.95.122','Raspi2'))
     o = Process(target=airsensor.airSensor, args=(org,place,brokerIP,clientId,cfgfile))
     o.start()
+
+    while True:
+        if not p.is_alive():
+           logger.warning('pControl is DEAD - Restarting-it')
+           p.terminate()
+           p.run()
+           time.sleep(0.1)
+           logger.warning( "New PID: " + str(p.pid))
+
+        if not o.is_alive():
+           logger.warning('airSensor is DEAD - Restarting-it')
+           o.terminate()
+           o.run()
+           time.sleep(0.1)
+           logger.warning( "New PID: " + str(o.pid))
+
+
 
     p.join()
     o.join()
